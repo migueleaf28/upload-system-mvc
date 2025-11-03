@@ -6,6 +6,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Role;
+use App\Models\File;
+use App\Models\Group;
 
 class User extends Authenticatable
 {
@@ -52,4 +55,31 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function files()
+    {
+        return $this->hasMany(File::class);
+    }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'user_group');
+    }
+    
+    public function storageUsed()
+    {
+        return $this->files()->sum('size');
+    }
+
+    public function storageQuota()
+    {
+        // if ($this->storage_quota) {
+        //     return $this->storage_quota;
+        // }
+
+        // $groupQuota = $this->groups()->pluck('storage_quota')->filter()->first();
+        // if ($groupQuota) {
+        //     return $groupQuota;
+        // }
+        return 10 * 1024 * 1024;
+    }
 }

@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ asset('js/upload.js') }}"></script>
 </head>
 <body class="bg-gray-500 min-h-screen flex flex-col items-center">
 
@@ -36,17 +38,18 @@
                     <th class="py-2 px-3 border-b">Tamaño</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr class="hover:bg-gray-50">
-                    <td class="py-2 px-3 text-blue-600 underline">document_report.pdf</td>
-                    <td class="py-2 px-3">PDF</td>
-                    <td class="py-2 px-3">1.2 MB</td>
-                </tr>
-                <tr class="hover:bg-gray-50">
-                    <td class="py-2 px-3 text-blue-600 underline">holiday_photos.docx</td>
-                    <td class="py-2 px-3">DOCX</td>
-                    <td class="py-2 px-3">0.8 MB</td>
-                </tr>
+            <tbody id="files-table-body">
+                    @forelse($files as $file)
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2 px-3 text-blue-600 underline">{{ $file->original_name }}</td>
+                            <td class="py-2 px-3">{{ strtoupper($file->mime_type) }}</td>
+                            <td class="py-2 px-3">{{ $file->formatted_size }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="py-2 px-3 text-gray-500 text-center">No hay archivos</td>
+                        </tr>
+                    @endforelse
             </tbody>
         </table>
 
@@ -54,19 +57,27 @@
 
         <h3 class="text-md font-semibold text-blue-600 mb-3">Subir nuevo archivo</h3>
 
-        <form action="#" method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-center gap-3">
+        <form id="uploadForm" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-center gap-3">
             @csrf
             <input 
+                id="fileInput"
                 type="file" 
                 name="file" 
                 class="border border-gray-300 rounded-lg px-3 py-2 w-full sm:w-auto text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none">
             <button 
                 type="submit" 
+                id="uploadButton"
                 class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg text-sm transition">
-                Subir archivo
+                <span id="uploadText">Subir archivo</span>
+                <span id="uploadSpinner" class="hidden">Subiendo...</span>
             </button>
         </form>
+        <div id="uploadMessage" class="mt-3"></div>
     </main>
-
+    <style>
+    .hidden {
+        display: none !important;
+    }
+    </style>
 </body>
 </html>

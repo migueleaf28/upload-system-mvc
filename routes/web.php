@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\FileController;
 
 
 Route::get('/', function () {
@@ -41,4 +42,20 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['auth'])->get('/dashboard/user', function () {
         return view('dashboard.user');
     })->name('dashboard.user');
+});
+
+Route::get('/dashboard/user', [FileController::class, 'index'])
+    ->middleware('auth')
+    ->name('dashboard.user');
+
+Route::post('/files/upload', [FileController::class, 'store'])->name('files.store');
+
+Route::get('/php-limits', function() {
+    return [
+        'post_max_size' => ini_get('post_max_size'),
+        'upload_max_filesize' => ini_get('upload_max_filesize'),
+        'memory_limit' => ini_get('memory_limit'),
+        'max_file_uploads' => ini_get('max_file_uploads'),
+        'max_execution_time' => ini_get('max_execution_time'),
+    ];
 });

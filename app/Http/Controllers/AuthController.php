@@ -9,7 +9,7 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-        public function showLoginForm()
+    public function showLoginForm()
     {
         return view('auth.login');
     }
@@ -21,7 +21,7 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt($credentials)) { 
             $request->session()->regenerate();
 
             $user = Auth::user();
