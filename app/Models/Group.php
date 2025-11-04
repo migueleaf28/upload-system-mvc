@@ -19,4 +19,9 @@ class Group extends Model
     {
         return $this->belongsToMany(User::class, 'user_group');
     }
+
+    public function getStorageQuotaInMbAttribute()
+    {
+        return $this->storage_quota ? round($this->storage_quota / 1048576) : null;
+    }
 }

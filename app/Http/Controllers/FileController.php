@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
-use App\Models\Setting;
+use App\Services\FileUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -11,16 +11,41 @@ use ZipArchive;
 
 class FileController extends Controller
 {
+    protected $uploadService;
+
+    public function __construct(FileUploadService $uploadService)
+    {
+        $this->uploadService = $uploadService;
+    }
+
     public function store(Request $request)
     {
         $user = auth()->user();
-        $uploadedFile = $request->file('file');
-
-        $request->validate([
-            'file' => 'required|file|max:10240',
-        ]);
 
         try {
+            if (!$request->hasFile('file')) {
+                $maxSize = $this->uploadService->getMaxUploadSizeReadable();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Error: El archivo es demasiado grande. Límite máximo: {$maxSize}"
+                ], 400);
+            }
+
+            $uploadedFile = $request->file('file');
+
+            if ($this->uploadService->exceedsMaxSize($uploadedFile->getSize())) {
+                $maxSize = $this->uploadService->getMaxUploadSizeReadable();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Error: El archivo es demasiado grande. Límite máximo: {$maxSize}"
+                ], 400);
+            }
+
+            $maxSizeKb = $this->uploadService->getMaxUploadSize() / 1024;
+            $request->validate([
+                'file' => "required|file|max:{$maxSizeKb}",
+            ]);
+
             $currentUsage = $user->storageUsed();
             $newFileSize = $uploadedFile->getSize();
             $quota = $user->storageQuota();
@@ -71,20 +96,26 @@ class FileController extends Controller
                 ]
             ]);
 
+        } catch (\Illuminate\Http\Exceptions\PostTooLargeException $e) {
+            $maxSize = $this->uploadService->getMaxUploadSizeReadable();
+            return response()->json([
+                'success' => false,
+                'message' => "Error: El archivo excede el límite permitido: {$maxSize}"
+            ], 400);
+            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Error al subir el archivo: ' . $e->getMessage()
             ], 500);
         }
     }
 
     private function isExtensionAllowed(string $extension): bool
     {
-        $blockedExtensions = $this->getBlockedExtensions();
+        $blockedExtensions = $this->uploadService->getBlockedExtensions();
         return !in_array(strtolower($extension), $blockedExtensions);
     }
-
 
     private function validateZipContents($zipFile): array
     {
@@ -92,7 +123,7 @@ class FileController extends Controller
         $tempPath = $zipFile->getPathname();
         
         if ($zip->open($tempPath) === TRUE) {
-            $blockedExtensions = $this->getBlockedExtensions();
+            $blockedExtensions = $this->uploadService->getBlockedExtensions();
             
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $filename = $zip->getNameIndex($i);
@@ -117,24 +148,6 @@ class FileController extends Controller
         return ['allowed' => true];
     }
 
-    private function getBlockedExtensions(): array
-    {
-        if (class_exists('App\Models\Setting')) {
-            return Setting::getBlockedExtensions();
-        }
-        
-        $setting = \Illuminate\Support\Facades\DB::table('settings')
-                    ->where('key', 'blocked_extensions')
-                    ->first();
-        
-        if ($setting && $setting->value) {
-            $extensions = json_decode($setting->value, true);
-            return is_array($extensions) ? $extensions : [];
-        }
-        
-        return ['exe', 'bat', 'cmd', 'sh', 'php', 'js', 'html', 'htm', 'phtml', 'py', 'pl', 'jar', 'war', 'apk'];
-    }
-
     public function index()
     {
         if (!Auth::check()) {
@@ -143,6 +156,9 @@ class FileController extends Controller
 
         $user = Auth::user();
         $files = $user->files()->orderBy('created_at', 'desc')->get();
-        return view('dashboard.user', compact('files'));
+        
+        $maxSize = $this->uploadService->getMaxUploadSizeReadable();
+        
+        return view('dashboard.user', compact('files', 'maxSize'));
     }
 }
