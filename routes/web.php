@@ -3,7 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
-
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\GroupController;
+use App\Http\Controllers\ConfigController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -34,11 +37,41 @@ Route::middleware(['auth'])->group(function () {
         };
     })->name('dashboard');
 
-    Route::middleware('role:Admin')->get('/dashboard/admin', function () {
-        return view('dashboard.admin');
-    })->name('dashboard.admin');
+    Route::middleware('role:Admin')->group(function () {
+        Route::get('/dashboard/admin', [ConfigController::class, 'adminDashboard'])->name('dashboard.admin');
+        
+        Route::post('/admin/config/update', [ConfigController::class, 'updateConfig'])->name('admin.config.update');
+        Route::post('/admin/config/add-extension', [ConfigController::class, 'addBlockedExtension'])->name('admin.config.add-extension');
+        Route::delete('/admin/config/remove-extension/{extension}', [ConfigController::class, 'removeBlockedExtension'])->name('admin.config.remove-extension');
 
-    Route::middleware(['auth'])->get('/dashboard/user', function () {
-        return view('dashboard.user');
-    })->name('dashboard.user');
+        Route::resource('admin/users', UserController::class)->names([
+            'index' => 'admin.users.index',
+            'create' => 'admin.users.create',
+            'store' => 'admin.users.store',
+            'show' => 'admin.users.show',
+            'edit' => 'admin.users.edit',
+            'update' => 'admin.users.update',
+            'destroy' => 'admin.users.destroy'
+        ]);
+
+        Route::resource('admin/groups', GroupController::class)->names([
+            'index' => 'admin.groups.index',
+            'create' => 'admin.groups.create',
+            'store' => 'admin.groups.store',
+            'show' => 'admin.groups.show',
+            'edit' => 'admin.groups.edit',
+            'update' => 'admin.groups.update',
+            'destroy' => 'admin.groups.destroy'
+        ]);
+
+        Route::post('/groups/{group}/add-user', [GroupController::class, 'addUser'])
+            ->name('admin.groups.add-user');
+            
+        Route::delete('/groups/{group}/remove-user/{user}', [GroupController::class, 'removeUser'])
+            ->name('admin.groups.remove-user');
+    });
+
+    Route::get('/dashboard/user', [FileController::class, 'index'])->name('dashboard.user');
 });
+
+Route::post('/files/upload', [FileController::class, 'store'])->name('files.store');

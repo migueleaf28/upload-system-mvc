@@ -17,5 +17,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->renderable(function (PostTooLargeException $e, $request) {
+            $maxSize = ini_get('post_max_size');
+            
+            if ($request->expectsJson() || $request->is('files/upload')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Error: El archivo es demasiado grande. Límite máximo: {$maxSize}"
+                ], 400);
+            }
+            
+            return back()->with('error', "Error: El archivo es demasiado grande. Límite máximo: {$maxSize}");
+        });
     })->create();

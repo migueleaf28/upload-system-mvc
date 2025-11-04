@@ -3,141 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Panel de Administración</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ asset('js/admin.js') }}"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 flex min-h-screen">
-
-    <aside class="w-64 bg-gray-800 text-gray-200 flex flex-col">
-        <div class="p-5 text-2xl font-bold border-b border-gray-700">
-            Admin Panel
-        </div>
-        <nav class="flex-1 p-4 space-y-2">
-            <a href="#" class="block px-4 py-2 rounded-lg bg-blue-600 text-white">Dashboard</a>
-            <a href="#" class="block px-4 py-2 rounded-lg hover:bg-gray-700">Usuarios</a>
-            <a href="#" class="block px-4 py-2 rounded-lg hover:bg-gray-700">Grupos</a>
-            <a href="#" class="block px-4 py-2 rounded-lg hover:bg-gray-700">Configuraciones</a>
-        </nav>
-    </aside>
-
-    <main class="flex-1 p-8 overflow-y-auto">
-        <div class="fixed top-0 right-0 left-64 bg-white shadow flex justify-end items-center px-6 py-3 z-50">
-            <p class="text-gray-700">
-                Bienvenido, <span class="font-semibold text-gray-900">{{ auth()->user()->name }}</span>
-            </p>
-            <form action="{{ route('logout') }}" method="POST" class="ml-3">
-                @csrf
-                <button 
-                    type="submit" 
-                    class="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-1.5 rounded-lg transition"
-                >
-                    Cerrar sesión
-                </button>
-            </form>
-        </div>
-
-        <section class="bg-white rounded-xl shadow-md p-6 mb-8 mt-10">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Administrar Usuarios</h2>
-            <table class="w-full border-collapse mb-4">
-                <thead>
-                    <tr class="bg-blue-100 text-blue-800">
-                        <th class="py-2 px-3 text-left">ID</th>
-                        <th class="py-2 px-3 text-left">Nombre</th>
-                        <th class="py-2 px-3 text-left">Email</th>
-                        <th class="py-2 px-3 text-left">Groupo</th>
-                        <th class="py-2 px-3 text-left">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="hover:bg-gray-50">
-                        <td class="py-2 px-3">1</td>
-                        <td class="py-2 px-3">Alice Johnson</td>
-                        <td class="py-2 px-3">alice@email.com</td>
-                        <td class="py-2 px-3">50</td>
-                        <td class="py-2 px-3">
-                            <button class="text-blue-600 hover:underline mr-2">Editar</button>
-                            <button class="text-red-600 hover:underline">Eliminar</button>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-gray-50">
-                        <td class="py-2 px-3">2</td>
-                        <td class="py-2 px-3">Bob Williams</td>
-                        <td class="py-2 px-3">bob@email.com</td>
-                        <td class="py-2 px-3">22</td>
-                        <td class="py-2 px-3">
-                            <button class="text-blue-600 hover:underline mr-2">Editar</button>
-                            <button class="text-red-600 hover:underline">Eliminar</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm">
-                Agregar nuevo usuario
-            </button>
-        </section>
-
-        <section class="bg-white rounded-xl shadow-md p-6 mb-8">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Administrar Grupos</h2>
-            <table class="w-full border-collapse mb-4">
-                <thead>
-                    <tr class="bg-blue-100 text-blue-800">
-                        <th class="py-2 px-3 text-left">Nombre del grupo</th>
-                        <th class="py-2 px-3 text-left">Descripción</th>
-                        <th class="py-2 px-3 text-left">Allowed Types</th>
-                        <th class="py-2 px-3 text-left">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="hover:bg-gray-50">
-                        <td class="py-2 px-3">Premium Users</td>
-                        <td class="py-2 px-3">Premium Users</td>
-                        <td class="py-2 px-3">.pdf, .docx, .jpg</td>
-                        <td class="py-2 px-3">
-                            <button class="text-red-600 hover:underline mr-2">Eliminar</button>
-                            <button class="text-blue-600 hover:underline">Editar</button>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-gray-50">
-                        <td class="py-2 px-3">Standard Users</td>
-                        <td class="py-2 px-3">Standard Users</td>
-                        <td class="py-2 px-3">.pdf, .docx</td>
-                        <td class="py-2 px-3">
-                            <button class="text-red-600 hover:underline mr-2">Eliminar</button>
-                            <button class="text-blue-600 hover:underline">Editar</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm">
-                Crear nuevo grupo
-            </button>
-        </section>
-
-        <section class="bg-white rounded-xl shadow-md p-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Configurar límites y restricciones</h2>
-
-            <form class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Tamaño máximo de archivo (MB)</label>
-                    <input type="number" value="50" class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-400">
+    <body class="bg-gray-100">
+        <div class="min-h-screen flex">
+            <div class="w-64 bg-gray-800 text-white">
+                <div class="p-5 text-2xl font-bold border-b border-gray-700">
+                    Admin Panel
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Tipo de archivo permitidos</label>
-                    <input type="text" value=".pdf, .docx, .jpg" class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-400">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Limite diario de subida (archivos)</label>
-                    <input type="number" value="10" class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-400">
-                </div>
-            </form>
-
-            <div class="mt-4">
-                <button class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg text-sm transition">
-                    Guardar configuraciones
-                </button>
+                <nav class="flex-1 p-4 space-y-2">
+                    <a href="#" class="block px-4 py-2 rounded-lg bg-blue-600 text-white">Dashboard</a>
+                    <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700">Usuarios</a>
+                    <a href="{{ route('admin.groups.index') }}" class="block px-4 py-2 rounded-lg hover:bg-gray-700">Grupos</a>
+                </nav>
             </div>
-        </section>
-    </main>
+            <div class="fixed top-0 right-0 left-64 bg-white shadow flex justify-end items-center px-6 py-3 z-50">
+                <p class="text-gray-700">
+                    Bienvenido, <span class="font-semibold text-gray-900">{{ auth()->user()->name }}</span>
+                </p>
+                <form action="{{ route('logout') }}" method="POST" class="ml-3">
+                    @csrf
+                    <button 
+                        type="submit" 
+                        class="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-1.5 rounded-lg transition"
+                    >
+                        Cerrar sesión
+                    </button>
+                </form>
+            </div>
+            <div class="flex-1 p-8 mt-20">
+                <h1 class="text-3xl font-bold text-gray-800 mb-8">Configuración del Sistema</h1>
 
-</body>
+                @if(session('success'))
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                <div class="bg-white shadow-lg rounded-lg p-6 mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Configuración de Subida de Archivos</h2>
+
+                    <form action="{{ route('admin.config.update') }}" method="POST" id="configForm">
+                        @csrf
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                            <div>
+                                <label class="block text-lg font-semibold text-gray-700 mb-2">
+                                    Límite Global por Defecto (MB)
+                                </label>
+                                <input type="number" name="user_default_storage" 
+                                    value="{{ old('user_default_storage', round($userDefaultStorage / 1048576)) }}"
+                                    class="w-32 px-3 py-2 border border-gray-300 rounded"
+                                    min="1" required>
+                                <p class="text-sm text-gray-500 mt-1">
+                                    Aplicado a todos los usuarios sin límite específico
+                                </p>
+                            </div>
+                            <div>
+                                <label class="block text-lg font-semibold text-gray-700 mb-2">
+                                    Tamaño Máximo por Archivo (MB)
+                                </label>
+                                <input type="number" name="max_file_size" 
+                                    value="{{ old('max_file_size', round($maxFileSize / 1048576)) }}"
+                                    class="w-32 px-3 py-2 border border-gray-300 rounded"
+                                    min="1" required>
+                                <p class="text-sm text-gray-500 mt-1">
+                                    Límite físico del servidor
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700">
+                                Guardar Configuración
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-8 pt-8 border-t border-gray-200">
+                        <label class="block text-lg font-semibold text-gray-700 mb-2">
+                            Extensiones Prohibidas
+                        </label>
+                        <p class="text-sm text-gray-500 mb-2">Ej: exe, php, js</p>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            @foreach($blockedExtensions as $extension)
+                                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm flex items-center">
+                                    .{{ $extension }}
+                                    <form action="{{ route('admin.config.remove-extension', $extension) }}" method="POST" class="ml-2">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-800" onclick="return confirm('¿Eliminar .{{ $extension }}?')">
+                                            ×
+                                        </button>
+                                    </form>
+                                </span>
+                            @endforeach
+                        </div>
+                        
+                        <p class="text-sm text-gray-500 mb-4">
+                            Estas extensiones serán bloqueadas, incluso dentro de archivos ZIP
+                        </p>
+
+                        <div class="flex gap-2">
+                            <input type="text" name="new_extension" id="new_extension" placeholder="Ej: exe" 
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded"
+                                pattern="[a-zA-Z0-9]+" maxlength="10">
+                            <button type="button" onclick="addExtension()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                                Agregar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
 </html>

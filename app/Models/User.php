@@ -6,6 +6,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Role;
+use App\Models\File;
+use App\Models\Group;
 
 class User extends Authenticatable
 {
@@ -22,6 +25,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'storage_quota',
     ];
 
     /**
@@ -52,4 +56,41 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function files()
+    {
+        return $this->hasMany(File::class);
+    }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'user_group');
+    }
+
+    public function getEffectiveStorageLimit()
+    {
+        if ($this->storage_limit !== null) {
+            return $this->storage_limit;
+        }
+        
+        $groupLimits = $this->groups()->whereNotNull('storage_limit')->pluck('storage_limit');
+        if ($groupLimits->isNotEmpty()) {
+            return $groupLimits->min();
+        }
+        
+        return Setting::getValue('user_default_storage', 104857600);
+    }
+    
+    public function storageUsed()
+    {
+        return $this->files()->sum('size');
+    }
+
+    public function storageQuota()
+    {
+        if ($this->storage_quota) {
+            return $this->storage_quota;
+        }
+        
+        return 10 * 1024 * 1024;
+    }
 }
