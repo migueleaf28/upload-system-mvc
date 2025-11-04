@@ -44,13 +44,13 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="storage_quota" class="block text-sm font-medium text-gray-700">Límite de almacenamiento (MB)</label>
-                        <input type="number" name="storage_quota" id="storage_quota" 
-                            value="{{ old('storage_quota') }}"
+                        <label for="storage_limit" class="block text-sm font-medium text-gray-700">Límite de almacenamiento (MB)</label>
+                        <input type="number" name="storage_limit" id="storage_limit" 
+                            value="{{ old('storage_limit') }}"
                             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:border-blue-500 focus:ring focus:ring-blue-200"
                             placeholder="Dejar vacío para usar el límite global">
                         <p class="text-xs text-gray-500 mt-1">Límite específico para este usuario. Vacío = usar límite global</p>
-                        @error('storage_quota')
+                        @error('storage_limit')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>

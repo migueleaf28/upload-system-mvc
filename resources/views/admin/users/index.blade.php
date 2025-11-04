@@ -52,9 +52,9 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($user->storage_quota)
+                            @if($user->storage_limit)
                                 <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                                    {{ number_format($user->storage_quota / 1048576, 0) }} MB
+                                    {{ number_format($user->storage_limit / 1048576, 0) }} MB
                                 </span>
                             @else
                                 <span class="text-gray-500 text-sm">Global</span>

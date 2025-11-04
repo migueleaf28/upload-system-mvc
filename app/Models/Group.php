@@ -12,7 +12,7 @@ class Group extends Model
     protected $fillable = [
         'name',
         'description',
-        'storage_quota',
+        'storage_limit'
     ];
 
     public function users()
@@ -22,6 +22,6 @@ class Group extends Model
 
     public function getStorageQuotaInMbAttribute()
     {
-        return $this->storage_quota ? round($this->storage_quota / 1048576) : null;
+        return $this->storage_limit ? round($this->storage_limit / 1048576) : null;
     }
 }
