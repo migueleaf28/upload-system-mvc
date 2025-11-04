@@ -3,103 +3,80 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use App\Models\User;
 
 class FileUploadService
 {
-    public function getMaxUploadSize(): int
+    public function getUserMaxFileSize(User $user): int
     {
-        $customLimit = $this->getCustomMaxSize();
-        if ($customLimit > 0) {
-            return min($customLimit, $this->getSystemMaxSize());
-        }
-
-        return $this->getSystemMaxSize();
+        $userLimit = $user->getEffectiveStorageLimit();
+        $usedStorage = $user->files()->sum('size');
+        $available = $userLimit - $usedStorage;
+        
+        $available = max(0, $available);
+        
+        $globalLimit = $this->getGlobalMaxFileSize();
+        
+        return min($available, $globalLimit);
     }
 
-    public function getSystemMaxSize(): int
+    public function getGlobalMaxFileSize(): int
     {
-        return min(
-            $this->sizeToBytes(ini_get('upload_max_filesize')),
-            $this->sizeToBytes(ini_get('post_max_size')),
-            $this->sizeToBytes(ini_get('memory_limit')) / 4
-        );
+        return Setting::getValue('max_file_size', 26214400);
     }
 
-    public function getCustomMaxSize(): int
+    public function getUserMaxFileSizeReadable(User $user): string
     {
-        $customSize = Setting::getValue('max_upload_size', '0');
-        return $this->sizeToBytes($customSize);
+        $bytes = $this->getUserMaxFileSize($user);
+        return $this->formatBytes($bytes);
     }
 
-    public function setCustomMaxSize(string $size): bool
+    public function getGlobalMaxFileSizeReadable(): string
     {
-        return Setting::setValue('max_upload_size', $size);
+        $bytes = $this->getGlobalMaxFileSize();
+        return $this->formatBytes($bytes);
     }
 
-    public function getMaxUploadSizeReadable(): string
+    public function canUserUploadFile(User $user, int $fileSize): array
     {
-        $bytes = $this->getMaxUploadSize();
-        return $this->bytesToSize($bytes);
+        $userLimit = $user->getEffectiveStorageLimit();
+        $usedStorage = $user->files()->sum('size');
+        $available = max(0, $userLimit - $usedStorage);
+        $maxFileSize = $this->getUserMaxFileSize($user);
+
+        return [
+            'allowed' => $fileSize <= $available && $fileSize <= $maxFileSize,
+            'user_limit' => $userLimit,
+            'used_storage' => $usedStorage,
+            'available' => $available,
+            'max_file_size' => $maxFileSize,
+            'file_size' => $fileSize,
+            'exceeds_quota' => $fileSize > $available,
+            'exceeds_global' => $fileSize > $this->getGlobalMaxFileSize()
+        ];
     }
 
     public function exceedsMaxSize(int $fileSize): bool
     {
-        return $fileSize > $this->getMaxUploadSize();
+        return $fileSize > $this->getGlobalMaxFileSize();
     }
 
     public function getBlockedExtensions(): array
     {
-        return Setting::getArrayValue('blocked_extensions', []);
+        $extensions = Setting::getValue('blocked_extensions', '');
+        return $extensions ? explode(',', $extensions) : [];
     }
 
-    public function updateBlockedExtensions(array $extensions): bool
-    {
-        return Setting::setArrayValue('blocked_extensions', $extensions);
-    }
-
-    public function sizeToBytes(string $size): int
-    {
-        if (empty($size) || $size === '0') return 0;
-
-        $unit = strtolower(preg_replace('/[^a-z]/i', '', $size));
-        $size = (float) preg_replace('/[^0-9\.]/', '', $size);
-        
-        $units = [
-            'b' => 1,
-            'k' => 1024,
-            'm' => 1024 * 1024,
-            'g' => 1024 * 1024 * 1024,
-        ];
-
-        $unit = $unit ?: 'm';
-        $multiplier = $units[$unit] ?? $units['m'];
-
-        return (int) ($size * $multiplier);
-    }
-
-
-    public function bytesToSize(int $bytes): string
+    public function formatBytes(int $bytes, int $precision = 2): string
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         
-        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
-            $bytes /= 1024;
-        }
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
         
-        return round($bytes, 2) . ' ' . $units[$i];
-    }
-
-    public function getUploadLimits(): array
-    {
-        return [
-            'system_limits' => [
-                'upload_max_filesize' => ini_get('upload_max_filesize'),
-                'post_max_size' => ini_get('post_max_size'),
-                'memory_limit' => ini_get('memory_limit'),
-            ],
-            'custom_max_size' => $this->getCustomMaxSize() > 0 ? $this->bytesToSize($this->getCustomMaxSize()) : 'No establecido',
-            'effective_max_size' => $this->getMaxUploadSizeReadable(),
-            'blocked_extensions_count' => count($this->getBlockedExtensions()),
-        ];
+        $bytes /= pow(1024, $pow);
+        
+        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 }

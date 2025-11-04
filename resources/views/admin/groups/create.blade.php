@@ -46,12 +46,12 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="storage_quota" class="block text-sm font-medium text-gray-700">Cuota de Almacenamiento (MB)</label>
-                        <input type="number" name="storage_quota" id="storage_quota" value="{{ old('storage_quota') }}" min="1"
+                        <label for="storage_limit" class="block text-sm font-medium text-gray-700">Cuota de Almacenamiento (MB)</label>
+                        <input type="number" name="storage_limit" id="storage_limit" value="{{ old('storage_limit') }}" min="1"
                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:border-blue-500 focus:ring focus:ring-blue-200"
                                placeholder="Dejar vacío para cuota ilimitada">
                         <p class="text-xs text-gray-500 mt-1">Cuota de almacenamiento en megabytes. Dejar vacío para ilimitado.</p>
-                        @error('storage_quota')
+                        @error('storage_limit')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>

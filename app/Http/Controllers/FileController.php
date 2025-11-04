@@ -24,36 +24,38 @@ class FileController extends Controller
 
         try {
             if (!$request->hasFile('file')) {
-                $maxSize = $this->uploadService->getMaxUploadSizeReadable();
                 return response()->json([
                     'success' => false,
-                    'message' => "Error: El archivo es demasiado grande. Límite máximo: {$maxSize}"
+                    'message' => "Por favor selecciona un archivo"
                 ], 400);
             }
 
             $uploadedFile = $request->file('file');
+            $fileSize = $uploadedFile->getSize();
 
-            if ($this->uploadService->exceedsMaxSize($uploadedFile->getSize())) {
-                $maxSize = $this->uploadService->getMaxUploadSizeReadable();
+            $quotaCheck = $this->uploadService->canUserUploadFile($user, $fileSize);
+            
+            if (!$quotaCheck['allowed']) {
+                $maxSize = $this->uploadService->getUserMaxFileSizeReadable($user);
+                $available = $this->uploadService->formatBytes($quotaCheck['available']);
+                
+                if ($quotaCheck['exceeds_quota']) {
+                    $message = "Error: No tienes espacio suficiente. Disponible: {$available}, Archivo: {$this->uploadService->formatBytes($fileSize)}";
+                } else {
+                    $message = "Error: El archivo es demasiado grande. Máximo permitido: {$maxSize}";
+                }
+                
                 return response()->json([
                     'success' => false,
-                    'message' => "Error: El archivo es demasiado grande. Límite máximo: {$maxSize}"
+                    'message' => $message
                 ], 400);
             }
 
-            $maxSizeKb = $this->uploadService->getMaxUploadSize() / 1024;
-            $request->validate([
-                'file' => "required|file|max:{$maxSizeKb}",
-            ]);
-
-            $currentUsage = $user->storageUsed();
-            $newFileSize = $uploadedFile->getSize();
-            $quota = $user->storageQuota();
-
-            if ($currentUsage + $newFileSize > $quota) {
+            if ($this->uploadService->exceedsMaxSize($fileSize)) {
+                $maxSize = $this->uploadService->getGlobalMaxFileSizeReadable();
                 return response()->json([
                     'success' => false,
-                    'message' => "Error: Cuota de almacenamiento (" . number_format($quota / 1024 / 1024, 2) . " MB) excedida."
+                    'message' => "Error: El archivo excede el límite global del sistema: {$maxSize}"
                 ], 400);
             }
 
@@ -83,13 +85,14 @@ class FileController extends Controller
                 'original_name' => $uploadedFile->getClientOriginalName(),
                 'mime_type' => $uploadedFile->getMimeType(),
                 'path' => $path,
-                'size' => $newFileSize,
+                'size' => $fileSize,
             ]);
 
             return response()->json([
                 'success' => true, 
                 'message' => 'Archivo subido con éxito.',
                 'file' => [
+                    'id' => $file->id,
                     'original_name' => $file->original_name,
                     'mime_type' => $file->mime_type,
                     'formatted_size' => $file->formatted_size
@@ -97,7 +100,7 @@ class FileController extends Controller
             ]);
 
         } catch (\Illuminate\Http\Exceptions\PostTooLargeException $e) {
-            $maxSize = $this->uploadService->getMaxUploadSizeReadable();
+            $maxSize = $this->uploadService->getGlobalMaxFileSizeReadable();
             return response()->json([
                 'success' => false,
                 'message' => "Error: El archivo excede el límite permitido: {$maxSize}"
@@ -157,8 +160,73 @@ class FileController extends Controller
         $user = Auth::user();
         $files = $user->files()->orderBy('created_at', 'desc')->get();
         
-        $maxSize = $this->uploadService->getMaxUploadSizeReadable();
+        $totalUsed = $user->files()->sum('size');
+        $storageLimit = $user->getEffectiveStorageLimit();
+        $formattedUsed = number_format($totalUsed / 1048576, 2) . ' MB';
+        $formattedLimit = number_format($storageLimit / 1048576, 2) . ' MB';
+        $percentage = $storageLimit > 0 ? min(100, ($totalUsed / $storageLimit) * 100) : 0;
         
-        return view('dashboard.user', compact('files', 'maxSize'));
+        $maxFileSize = $this->uploadService->getUserMaxFileSizeReadable($user);
+        $globalMaxSize = $this->uploadService->getGlobalMaxFileSizeReadable();
+        
+        return view('dashboard.user', compact(
+            'files', 
+            'maxFileSize',
+            'globalMaxSize',
+            'totalUsed',
+            'formattedUsed',
+            'formattedLimit', 
+            'percentage'
+        ));
+    }
+
+    public function destroy(File $file)
+    {
+        try {
+            if ($file->user_id !== auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permiso para eliminar este archivo'
+                ], 403);
+            }
+
+            Storage::delete($file->path);
+
+            $file->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Archivo eliminado correctamente'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar el archivo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function getStorageInfo()
+    {
+        $user = Auth::user();
+        
+        $totalUsed = $user->files()->sum('size');
+        $storageLimit = $user->getEffectiveStorageLimit();
+        $formattedUsed = number_format($totalUsed / 1048576, 2) . ' MB';
+        $formattedLimit = number_format($storageLimit / 1048576, 2) . ' MB';
+        $percentage = $storageLimit > 0 ? min(100, ($totalUsed / $storageLimit) * 100) : 0;
+        $maxFileSize = $this->uploadService->getUserMaxFileSizeReadable($user);
+        
+        return response()->json([
+            'success' => true,
+            'storage_info' => [
+                'used' => $formattedUsed,
+                'limit' => $formattedLimit,
+                'percentage' => $percentage,
+                'max_file_size' => $maxFileSize,
+                'used_bytes' => $totalUsed,
+                'limit_bytes' => $storageLimit
+            ]
+        ]);
     }
 }

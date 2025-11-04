@@ -48,8 +48,8 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                                   @if($group->storage_quota_in_mb)
-                                        {{ number_format($group->storage_quota_in_mb) }} MB
+                                   @if($group->storage_limit_in_mb)
+                                        {{ number_format($group->storage_limit_in_mb) }} MB
                                     @else
                                         <span class="text-gray-500">Global</span>
                                     @endif

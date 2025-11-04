@@ -34,20 +34,20 @@ class GroupController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:groups'],
             'description' => ['nullable', 'string'],
-            'storage_quota' => ['nullable', 'integer', 'min:1'],
+            'storage_limit' => ['nullable', 'integer', 'min:1'],
         ], [
             'name.required' => 'El nombre del grupo es obligatorio.',
             'name.unique' => 'Ya existe un grupo con este nombre.',
-            'storage_quota.integer' => 'La cuota de almacenamiento debe ser tener un digito.',
-            'storage_quota.min' => 'La cuota de almacenamiento debe ser al menos 1 MB.',
+            'storage_limit.integer' => 'La cuota de almacenamiento debe ser tener un digito.',
+            'storage_limit.min' => 'La cuota de almacenamiento debe ser al menos 1 MB.',
         ]);
 
-        $storageQuota = $request->storage_quota ? $request->storage_quota * 1048576 : null;
+        $storageLimit = $request->storage_limit ? $request->storage_limit * 1048576 : null;
 
         Group::create([
             'name' => $request->name,
             'description' => $request->description,
-            'storage_quota' => $storageQuota,
+            'storage_limit' => $storageLimit,
         ]);
 
         return redirect()->route('admin.groups.index')
@@ -87,20 +87,20 @@ class GroupController extends Controller
                 Rule::unique('groups')->ignore($group->id)
             ],
             'description' => ['nullable', 'string'],
-            'storage_quota' => ['nullable', 'integer', 'min:1'],
+            'storage_limit' => ['nullable', 'integer', 'min:1'],
         ], [
             'name.required' => 'El nombre del grupo es obligatorio.',
             'name.unique' => 'Ya existe un grupo con este nombre.',
-            'storage_quota.integer' => 'La cuota de almacenamiento debe ser un número.',
-            'storage_quota.min' => 'La cuota de almacenamiento debe ser al menos 1 MB.',
+            'storage_limit.integer' => 'La cuota de almacenamiento debe ser un número.',
+            'storage_limit.min' => 'La cuota de almacenamiento debe ser al menos 1 MB.',
         ]);
 
-        $storageQuota = $request->storage_quota ? $request->storage_quota * 1048576 : null;
+        $storageLimit = $request->storage_limit ? $request->storage_limit * 1048576 : null;
 
         $group->update([
             'name' => $request->name,
             'description' => $request->description,
-            'storage_quota' => $storageQuota,
+            'storage_limit' => $storageLimit,
         ]);
 
         return redirect()->route('admin.groups.index')

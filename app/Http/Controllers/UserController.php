@@ -38,7 +38,7 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role_id' => ['required', 'exists:roles,id'],
-            'storage_quota' => ['nullable', 'integer', 'min:1'],
+            'storage_limit' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $userData = [
@@ -48,8 +48,8 @@ class UserController extends Controller
             'role_id' => $request->role_id,
         ];
 
-        if ($request->filled('storage_quota')) {
-            $userData['storage_quota'] = $request->storage_quota * 1048576;
+        if ($request->filled('storage_limit')) {
+            $userData['storage_limit'] = $request->storage_limit * 1048576;
         }
 
         User::create($userData);
@@ -85,7 +85,7 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role_id' => ['required', 'exists:roles,id'],
-            'storage_quota' => ['nullable', 'integer', 'min:1'],
+            'storage_limit' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $data = [
@@ -98,10 +98,10 @@ class UserController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
-        if ($request->filled('storage_quota')) {
-            $data['storage_quota'] = $request->storage_quota * 1048576;
+        if ($request->filled('storage_limit')) {
+            $data['storage_limit'] = $request->storage_limit * 1048576;
         } else {
-            $data['storage_quota'] = null;
+            $data['storage_limit'] = null;
         }
 
         $user->update($data);

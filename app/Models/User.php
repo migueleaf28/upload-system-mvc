@@ -25,7 +25,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
-        'storage_quota',
+        'storage_limit', 
+        'storage_used'
     ];
 
     /**
@@ -87,8 +88,8 @@ class User extends Authenticatable
 
     public function storageQuota()
     {
-        if ($this->storage_quota) {
-            return $this->storage_quota;
+        if ($this->storage_limit) {
+            return $this->storage_limit;
         }
         
         return 10 * 1024 * 1024;

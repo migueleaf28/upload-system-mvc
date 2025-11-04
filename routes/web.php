@@ -75,3 +75,5 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::post('/files/upload', [FileController::class, 'store'])->name('files.store');
+Route::delete('/files/{file}', [FileController::class, 'destroy'])->name('files.destroy');
+Route::get('/storage-info', [FileController::class, 'getStorageInfo'])->name('storage.info');
